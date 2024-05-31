@@ -54,6 +54,20 @@ export default function App() {
     setSelectedFriend((cur) => (cur?.id === friend.id ? null : friend));
     setShowAddFriend(false);
   }
+
+  // function to calculate the bills according the value entered
+  function handleSplitBill(value) {
+    // console.log(value);
+    setFriends((friends) =>
+      friends.map((friend) =>
+        friend.id === selectedFriend.id
+          ? { ...friend, balance: friend.balance + value }
+          : friend
+      )
+    );
+    // remove the FormSplitBill after submitting
+    setSelectedFriend(null);
+  }
   return (
     <div className='app'>
       <div className='sidebar'>
@@ -72,7 +86,13 @@ export default function App() {
       </div>
       {/* first part of the code make this FormSplitBill display null by default */}
       {/* second part makes the name of the object select get displayed */}
-      {selectedFriend && <FormSplitBill selectedFriend={selectedFriend} />}
+      {selectedFriend && (
+        <FormSplitBill
+          selectedFriend={selectedFriend}
+          onSplitBill={handleSplitBill}
+          key={selectedFriend.id}
+        />
+      )}
     </div>
   );
 }
@@ -168,14 +188,21 @@ function FormAddFriend({ onAddFriend }) {
   );
 }
 
-function FormSplitBill({ selectedFriend }) {
+function FormSplitBill({ selectedFriend, onSplitBill }) {
   const [bill, setBill] = useState('');
   const [paidByUser, setPaidByUser] = useState('');
   // friends expenses or paidByFriend  = if bill is  present minus what user paid
   const paidByFriend = bill ? bill - paidByUser : '';
   const [whoIsPaying, setWhoIsPaying] = useState('user');
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!bill || !paidByUser) return;
+    // if the user is paying then the friend is minus else if friend is paying then user is minus
+    onSplitBill(whoIsPaying === 'user' ? paidByFriend : -paidByUser);
+  }
   return (
-    <form className='form-split-bill'>
+    <form className='form-split-bill' onSubmit={handleSubmit}>
       <h2>Split a bill with {selectedFriend.name}</h2>
       <label>Bill value</label>
       <input
